@@ -1,0 +1,233 @@
+;; Luke Powell - 16634291)
+;;Domain for cleaning floor tiles
+;; A domain file for CMP2020M assignment 2018/2019
+
+;; In order for me to do this assignment I used some materials for support. Firstly, a website called 'CSCI' allowed me to gain a better understanding of the structure needed to create the domain file
+;; CSCI allowed to see how to correctly and efficiently set out the actions. First comes the parameters which will be used within the action. Next is a set of preconditions which must be true for the action to take place. Finally is the effects which running the action will have
+;; I also used a resource (Veloso, 2002) which gave me an understanding of how to write a domain file where the object moves from one place to another
+;; Furthermore, I used a book called Artificial Intelligence: A Modern Approach (Russell, S and Norvig,P, 2009) the help me plan and set out my PDDL domain file
+;; The book gave me insight knowledge into how to domain file works making it easier to implement the actions
+;; This allowed me to gain an understanding of how to use the 'from' and 'to' parameters allowing me to add insight to the current context
+;; I already knew that I needed to include the 'clear' predicate to ensure that the tile in question was not occupied by a robot
+;; To add to this, I knew I needed to include the 'cleaned' predicate to ensure that the tile in question had been cleaned. This meant that the job of the robot had been done and also signified that it would be wet which is important as robots cannot operate of wet surfaces
+;; The task at hand is to implement 5 actions which will ensure: the robot can move tiles, the robot can clean tiles, the robot does not move onto already cleaned tiles, the robot cannot turn but can move up, down, left, right and the robot can only clean upwards and downwards 
+
+;; Define the name for this domain (needs to match the domain definition
+;;   in the problem files)
+
+
+(define (domain floor-tile)
+
+	;; We only require some typing to make this plan faster. We can do without!
+	(:requirements :typing)
+	
+	;; We have two types: robots and the tiles, both are objects
+	(:types robot tile - object)
+
+	;; define all the predicates as they are used in the probem files
+	(:predicates  
+
+	;; described what tile a robot is at
+    (robot-at ?r - robot ?x - tile)
+
+    ;; indicates that tile ?x is above tile ?y
+    (up ?x - tile ?y - tile)
+
+    ;; indicates that tile ?x is below tile ?y
+    (down ?x - tile ?y - tile)
+
+    ;; indicates that tile ?x is right of tile ?y
+    (right ?x - tile ?y - tile)
+
+    ;; indicates that tile ?x is left of tile ?y
+    (left ?x - tile ?y - tile)
+    
+    ;; indicates that a tile is clear (robot can move there)
+    (clear ?x - tile)
+
+    ;; indicates that a tile is cleaned
+    (cleaned ?x - tile)
+ 	)
+
+;; We must define some actions for the robot so that it can correctly clean the floor tiles
+;; Action definitions, e.g.
+
+;; The first action which we define is clean-up which enables the robot to clean the tile which is directly above its current position with its front facing brush
+(:action clean-up 
+;; The parameters which are given to the action is the robot, its current position where it wants to move from and the position it wants to go
+           :parameters (?r ?x ?y)
+;; The action is then given a set of preconditions that must be true for the action to take place
+           :precondition
+			(and
+;; This means that the robot must be at its current position at the start of the action				
+				(robot-at ?r ?x)
+;; Similarly, this means that the robot must not be at the position it wishes to end up
+				(not(robot-at ?r ?y))
+;; The next precondition ensures that the position where the robot wants to move to is not occupied by another robot		
+				(clear ?y)
+;; The next preconditons states that the target position must be directly above the current position of the robot so that it can move upwards				
+				(down ?x ?y)	
+;; This means that the tile which the robot wants to move to is not clean as that would mean it is wet and the robot cannot work on a wet tile and only cleans tiles once				
+				(not(cleaned ?y))
+				)
+;; The action then leads to the robot causing an effect to the plan
+           :effect 
+			(and 
+;; The effect is that the tile at the position the robot moved to has been cleaned
+				(cleaned ?y)				
+			))
+			
+;; The next action is the clean-down action which enables the robot to clean the title which is directly below its current position using its backwards facing brush
+ 	(:action clean-down
+;; The parameters which are given to the action is the robot, its current position where it wants to move from and the position it wants to go
+		   :parameters (?r ?x ?y)
+;; The action then takes in four preconditions which must be true for the action to take place
+		   :precondition
+			(and
+;; The robot must be at its current position at the beginning of the action				
+				(robot-at ?r ?x)
+;; Similarly, this means that the robot must not be at the position it wishes to end up
+				(not(robot-at ?r ?y))
+;; The position where the robot desires to go must no be already occupied by another robot
+				(clear ?y)
+;; The target posistion of the robot must be directly below the robots current position on the plan	so that it can move downwards			
+				(up ?x ?y)
+;; The position the robot moves to must not be clean. Robots cannot work on wet tiles and do not clean tiles which have already been cleaned				
+				(not(cleaned ?y))   		
+			)
+;; The action leads to the robot causing an effect
+		   :effect 
+			(and 
+;; The effect is that the tile which is the target position of the robot has been cleaned using the backwards facing brush
+				(cleaned ?y)
+			))
+
+;; The next action which is defined is the action of moving up		
+    (:action up
+;; The parameters which are given to the action is the robot, its current position where it wants to move from and the position it wants to go
+           :parameters (?r ?x ?y)
+;; A set of preconditions are given to the action which must be true in order for the action to take place
+           :precondition
+			(and 
+;; The robot must be at its current position where it wants to move from at the start of the action				
+				(robot-at ?r ?x) 
+;; Similarly, this means that the robot must not be at the position it wishes to end up
+				(not(robot-at ?r ?y))
+;; This precondition states that the tile where the robot wishes to go to must be clear and not occupied by another robot
+				(clear ?y)	
+;; The position where the robot wants to move to must be directly above the current position of the robot				
+				(down ?x ?y)
+;; The desired location of the robot must not have already been cleaned else the robot cannot work on that tile			
+				(not(cleaned ?y))			
+			) 
+;; This time there are four effects of the action being completed
+           :effect 
+			(and 
+;; The first effect states that the position the robot moved from must now be clear and not occupied by a robot
+				(clear ?x) 
+;; The robot must no longer be at the position where it started before the action took place				
+				(not(robot-at ?r ?x))
+;; The next effect states that the robot must end up at the target position
+				(robot-at ?r ?y)
+;; The target position must no longer be clear as the robot now occupies that location				
+				(not(clear ?y))
+			))
+
+;; The next action which is defined is the action of moving down			
+    (:action down
+;; The parameters which are given to the action is the robot, its current position where it wants to move from and the position it wants to go
+           :parameters (?r ?x ?y)
+;; A set of preconditions are given to the action which must be true for the action to take place
+           :precondition
+			(and
+;; This states that the robot is at the current position where it wishes to move from				
+				(robot-at ?r ?x)
+;; Similarly, this means that the robot must not be at the position it wishes to end up
+				(not(robot-at ?r ?y))
+;; The next precondition states that the tile which the robot wants to move to is clear and does not have another robot at it
+				(clear ?y)	
+;; Next, the position the robot wants to move to must be directly down from the current position of the robot
+				(up ?x ?y)
+;; The target positon must not be clean as robots only clean tiles once and cannot operate on wet surfaces				
+				(not(cleaned ?y))		
+			) 
+;; The action leads to a set of effects taking place
+           :effect 
+			(and 
+;; The current position which the robot formally occupied should now be clear and should not have a robot on it				
+				(clear ?x)
+;; The robot must no longer be at the position it was at before the action took place 				
+				(not(robot-at ?r ?x))
+;; One effect is that the robot should now be at its desired location as a pose to its current position
+				(robot-at ?r ?y)				
+;; The target position must no longer be clear as the robot is at that position
+				(not(clear ?y))		
+			)) 
+			
+;; The next action which is defined is the action of moving left			
+    (:action left
+;; The parameters which are given to the action is the robot, its current position where it wants to move from and the position it wants to go
+           :parameters (?r ?x ?y)
+;; The action has a set of preconditions which must be met in order for the action to take place and have an effect
+           :precondition
+			(and 
+;; The robot must be at its current position where it wishes to move from				
+				(robot-at ?r ?x)
+;; Similarly, this means that the robot must not be at the position it wishes to end up
+				(not(robot-at ?r ?y))
+;; One precondition is that the target position of the robot must be clear meaning there are no other robots at that location
+				(clear ?y)	
+;; The tile the robot wants to move to must be directly to the right of the robots current position				
+				(right ?x ?y)
+;; The target position must dirty allowing the robot to clean it				
+				(not(cleaned ?y))		
+			)
+;; The action then causes a number of effects to take place
+			:effect 
+			(and
+;; This means that the current position where the robot was is now clear and not occupied by anything				
+				(clear ?x) 
+;; The robot must no longer be at its current position as it is at its desired position				
+				(not(robot-at ?r ?x))
+;; One effect is that the robot is now at its desired location of its target position
+				(robot-at ?r ?y)
+;; The target position must no longer be clear as the robot now occupies that space
+				(not(clear ?y))			
+			))
+
+;; The final action which is defined is the action of moving right
+    (:action right
+;; The parameters which are given to the action is the robot, its current position where it wants to move from and the position it wants to go
+           :parameters (?r ?x ?y)
+;; A set of preconditions for the action are given which must be true in order for the action to take place
+           :precondition
+			(and
+;; The robot must be at its current position where it wishes to move from				
+				(robot-at ?r ?x)
+;; Similarly, this means that the robot must not be at the position it wishes to end up
+				(not(robot-at ?r ?y))
+;; The position the robot wishes to go to must be clear and not occupied by a robot so that the robot can move onto it
+				(clear ?y)		
+;; The tile the robot wants to go to must be directly to the right of its current position				
+				(left ?x ?y)
+;; The target position must be dirty so that the robot can clean it			
+				(not(cleaned ?y))		
+			)
+;; The action causes a set of effects to take place			
+           :effect 
+			(and 
+;; The current position of the robot is now clear as it is not occupied by a robot				
+				(clear ?x)
+;; The robot is no longer at its current position as its is on the tile is wished to move to 				
+				(not(robot-at ?r ?x))
+;; One effect is that the robot is now at its target position
+				(robot-at ?r ?y)
+;; The target positon is not clear as the robot now occupies it				
+				(not(clear ?y))			
+			))  
+)
+
+;;REFERENCES
+;; Eckroth, J. (.). PDDL. Available: http://csci431.artifice.cc/notes/pddl.html. Last accessed 29th March 2019
+;; Russell, S and Norvig,P. (2009). Classical Planning. In: Russell, S and Norvig,P Artificial Intelligence: A Modern Approach. 3rd ed. .: Prentice Hall. p372-380.	
+;; Veloso, M. (2002). PDDL by Example. Available: http://www.cs.toronto.edu/~sheila/384/w11/Assignments/A3/veloso-PDDL_by_Example.pdf. Last accessed 29th March 2019.			
